@@ -249,7 +249,7 @@ class MutatorVisitor(c_ast.NodeVisitor):
             del self.blocks_vars[self.curr_block]
 
         self.curr_block = "global"
-        n_compound_ast = c_ast.Compound(n_block_items, coord)
+        n_compound_ast = c_ast.Compound(n_block_items, node.coord)
         return n_compound_ast
 
     def visit_If(self, node):
@@ -441,7 +441,7 @@ class DeclDumVarVisitor(MutatorVisitor):
                         type=c_ast.TypeDecl(new_var_name, quals=[], align=[], type=c_ast.IdentifierType(['int']), coord=node.coord),
                         init=None,
                         bitsize=None ,
-                        coord=None))
+                        coord=node.coord))
                 else:
                     if isinstance(x, c_ast.Decl) and isinstance(x.type, c_ast.TypeDecl):
                         last_decl = i
@@ -456,10 +456,10 @@ class DeclDumVarVisitor(MutatorVisitor):
                         type=c_ast.TypeDecl(new_var_name, quals=[], align=[], type=c_ast.IdentifierType(['int']), coord=node.coord),
                         init=None,
                         bitsize=None ,
-                        coord=None))
+                        coord=node.coord))
                         break
         n_body = self.visit(body)
-        n_func_def_ast = c_ast.FuncDef(node.decl, node.param_decls, n_body, coord)
+        n_func_def_ast = c_ast.FuncDef(node.decl, node.param_decls, n_body, node.coord)
         return n_func_def_ast
 
 #-----------------------------------------------------------------
@@ -682,11 +682,16 @@ def instrument_file(input_file, output_dir):
             perc = 0.1 if total_progs < 100000 else 0.01
 
         min_per_mutation = 25
-        bin_ops_2_swap = [bin_ops_2_swap[0]] + random.sample(bin_ops_2_swap[1:], max(int(perc * len(bin_ops_2_swap)-1), 1))
-        if_elses_2_swap = [if_elses_2_swap[0]] + random.sample(if_elses_2_swap[1:], max(int(perc * len(if_elses_2_swap)-1), 1))
-        inc_ops_2_swap = [inc_ops_2_swap[0]] + random.sample(inc_ops_2_swap[1:], max(int(perc * len(inc_ops_2_swap)-1), 1))
-        fors_2_swap = [fors_2_swap[0]] + random.sample(fors_2_swap[1:], max(int(perc * len(fors_2_swap)-1), 1))
-        block_permutations = [block_permutations[0]] + random.sample(block_permutations[1:], max(int(perc*len(block_permutations)), 1))
+        if len(bin_ops_2_swap) > 1:
+            bin_ops_2_swap = [bin_ops_2_swap[0]] + random.sample(bin_ops_2_swap[1:], max(int(perc * len(bin_ops_2_swap)-1), 1))
+        if len(if_elses_2_swap) > 1:
+            if_elses_2_swap = [if_elses_2_swap[0]] + random.sample(if_elses_2_swap[1:], max(int(perc * len(if_elses_2_swap)-1), 1))
+        if len(inc_ops_2_swap) > 1:
+            inc_ops_2_swap = [inc_ops_2_swap[0]] + random.sample(inc_ops_2_swap[1:], max(int(perc * len(inc_ops_2_swap)-1), 1))
+        if len(fors_2_swap) > 1:
+            fors_2_swap = [fors_2_swap[0]] + random.sample(fors_2_swap[1:], max(int(perc * len(fors_2_swap)-1), 1))
+        if len(block_permutations) > 1:
+            block_permutations = [block_permutations[0]] + random.sample(block_permutations[1:], max(int(perc*len(block_permutations)), 1))
         n_reorderings = len(block_permutations)
         total_progs = len(bin_ops_2_swap)*len(if_elses_2_swap)*len(inc_ops_2_swap)*len(range(1, dv_limit, -1))*n_reorderings*len(fors_2_swap)
         perc = perc*0.9
