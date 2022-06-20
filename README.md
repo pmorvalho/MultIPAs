@@ -79,6 +79,13 @@ optional arguments:
 
 Every time MultIPAs mutates or mutilates a program, a mapping between the original program's set of variables and the mutated/mutilated program's sets of variables is generated. This variable mapping can help program repair frameworks that rely on mappings between the sets of variables of the correct implementation and the incorrect program they are trying to repair.
 
+## Introductory Programming Assignments (IPAs) Datasets 
+
++ [ITSP](https://github.com/pmorvalho/MultIPAs/tree/main/itsp/correct_submissions/year-1) : [https://github.com/jyi/ITSP](https://github.com/jyi/ITSP);
+    - Reference: Jooyong Yi, Umair Z. Ahmed, Amey Karkare, Shin Hwei Tan, and Abhik Roychoudhury. A feasibility study of using automated program repair for introductory programming assignments. ESEC/FSE 2017. [http://jooyongyi.com/papers/Yi-ESEC-FSE17.pdf](http://jooyongyi.com/papers/Yi-ESEC-FSE17.pdf).
++ [C-Pack-IPAs](https://github.com/pmorvalho/C-Pack-IPAs) : [https://github.com/pmorvalho/C-Pack-IPAs](https://github.com/pmorvalho/C-Pack-IPAs);
+    - Reference: Pedro Orvalho, Mikoláš Janota, and Vasco Manquinho. C-Pack of IPAs: A C90 Program Benchmark of Introductory Programming Assignments. 2022. [https://arxiv.org/pdf/2206.08768.pdf](https://arxiv.org/pdf/2206.08768.pdf) 
+
 ## Installation Requirements
 
 + Python 3.8.5
