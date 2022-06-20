@@ -9,6 +9,8 @@ MultIPAs is divided into two modules: Program Mutator and Program Mutilator.
 
 ## Program Mutator
 
+The following six syntactic program mutations are available on MultIPAs' program mutator:
+
 + _M1 - Comparison Expression Mirroring (CEM)_: MultIPAs mirrors one or several comparison expressions e.g. $a \ge b$ becomes $b \le a$;
 + _M2 - If-else-statements Swapping (IES)_: MultIPAs swaps the if-branch and the else-branch and negates the if-condition. This is done only for simple if-else-statements, i.e., there are no more if-statements inside the else-branch;
 + _M3 - Increment/Decrement Operators Mirroring (IOM)_: MultIPAs mirrors the two increment (and decrement) operators in the C programming language (e.g. **c++** and **++c**), only when the return value of the expression that contains the increment/decrement operator is discarded e.g. the increment step of a for-loop;
@@ -42,6 +44,8 @@ optional arguments:
 ```
 
 ## Program Mutilator
+
+The following three semantic program mutilations are available on MultIPAs' program mutilator:
 
 + _B1 - Wrong Comparison Operator (WCO)_: MultIPAs swaps an expression's comparison operators for some syntactically similar operator e.g. swaps the operator **<** for **<=**. MultIPAs can also swap **>** for **>=**, **<=** for **<**, **>=** for **>**, **==** for **=**, and **!=** for **==**;
 + _B2 - Variable Misuse (VM)_: MultIPAs swaps a variable in the program by another variable of the same type. The resulting mutilated program can be compiled successfully since MultIPAS ensures that both variables are of the same type;
