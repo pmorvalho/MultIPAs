@@ -1,0 +1,3 @@
+[submodule "C-Pack-IPAs"]
+	path = C-Pack-IPAs
+	url = git@github.com:pmorvalho/C-Pack-IPAs.git
