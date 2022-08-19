@@ -381,6 +381,7 @@ def instrument_file(input_file, output_dir):
     v = MutilatorVisitor()
     gen = c_generator.CGenerator ()
     n_ast = v.visit(ast)
+    original_ast=deepcopy(n_ast)
     # n_ast.show()
     # return
     if args.verbose:
@@ -436,6 +437,7 @@ def instrument_file(input_file, output_dir):
                 # b_ast = parse_file(output_file, use_cpp=True, cpp_path='gcc', cpp_args=['-E', '-Iutils/fake_libc_include'])
                 prev_nums.append(get_prog_name(b_id, vm_id, exp_id))
                 curr_num = prev_nums[-1]
+                n_ast=deepcopy(original_ast)
                 if corr_impl_id is None:
                     corr_impl_id = curr_num
                 if args.comp_ops or args.all_mut:
@@ -453,12 +455,22 @@ def instrument_file(input_file, output_dir):
                     b_ast = v_h.visit(n_ast)
                     var_maps[curr_num] = v.scope_vars
                     bugs_map[curr_num] = bugs_map[curr_num] | v_h.bugs_list if curr_num in bugs_map.keys() else v_h.bugs_list                    
-
+                    
                 if args.verbose:
                     print("Bug mapping:", curr_num, bugs_map[curr_num])
+
                 gen_output_file(gen, b_ast, sincludes + includes, curr_num, output_dir)
+                tmp_file = get_output_file_name(curr_num, output_dir)
+                try:
+                    ast = parse_file(tmp_file, use_cpp=True,
+                                         cpp_path='gcc',
+                                         cpp_args=['-E', '-Iutils/fake_libc_include'])
+                except:
+                    os.system("rm "+tmp_file)
+                    continue
                 gen_variable_mappings(var_maps, curr_num, corr_impl_id, output_dir)
-                save_bugs_map(bugs_map, curr_num, corr_impl_id, output_dir)                    
+                save_bugs_map(bugs_map, curr_num, corr_impl_id, output_dir)
+                
     os.system("rm "+output_file)
     
 #-----------------------------------------------------------------
@@ -471,7 +483,10 @@ def gen_program_mutilations(progs_dir, output_dir):
         stu_id = str(p).split("/")[-1][:-2] # to remove the .c
         if args.verbose:
             print("Dealing with program ", stu_id)
-        s_mutils = instrument_file(p, output_dir+"/"+stu_id)
+        new_dir = output_dir+"/"+stu_id
+        s_mutils = instrument_file(p, new_dir)
+        if len(list(pathlib.Path(new_dir).glob('tmp*'))) > 0:
+            os.system("rm -rf "+new_dir)
         if args.info and s_mutils is not None:
            total_progs += s_mutils
     if args.info:
