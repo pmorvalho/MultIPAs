@@ -39,7 +39,7 @@ bin_ops_2_swap = {"<" : ">", ">" : "<", "<=" : ">=", ">=" : "<=", "==" : "==", "
 incr_decr_ops = {"p++" : "++", "++" : "p++", "--" : "p--", "p--" : "--"}
 
 #-----------------------------------------------------------------
-class MutatorVisitor(c_ast.NodeVisitor):
+class MutatorVisitor(ASTVisitor):
 
     def __init__ (self):
         # list with the program variables
@@ -127,6 +127,13 @@ class MutatorVisitor(c_ast.NodeVisitor):
     def visit_ArrayDecl(self, node):
         #print('****************** Found Decl Node *******************')
         # node.show()
+        if isinstance(node.type, c_ast.TypeDecl):
+            if self.curr_block is not None:
+                self.blocks_vars[self.curr_block]["decls_id"].append(node_id(node.coord))
+                self.blocks_vars[self.curr_block]["var_2_coord"][node.type.declname] = node_id(node.coord)
+            self.scope_vars[node.type.declname] = "array-"+node.type.type.names[0]
+            self.curr_var = node.type.declname
+        
         return node
 
     def visit_Assignment(self, node):
@@ -232,7 +239,7 @@ class MutatorVisitor(c_ast.NodeVisitor):
         n_block_items = []
         if block_items is not None:
             for x in block_items:
-                if isinstance(x, c_ast.Decl) and isinstance(x.type, c_ast.TypeDecl):
+                if isinstance(x, c_ast.Decl):
                     self.declaring_var = True
 
                 n_block_items.append(self.visit(x))
@@ -241,10 +248,11 @@ class MutatorVisitor(c_ast.NodeVisitor):
                 self.curr_block = str(coord)
 
         self.blocks_vars[self.curr_block]["permutations"] = getTopologicalOrders(self.blocks_vars[self.curr_block]["decls_id"], self.blocks_vars[self.curr_block]["decls_dependencies"])
-        # print(self.blocks_vars[coord]["var_2_coord"])
-        # print(self.blocks_vars[coord]["decls_dependencies"])
-        # print(len(self.blocks_vars[coord]["permutations"]))
-        # print(self.blocks_vars[coord]["permutations"])
+        # print(self.blocks_vars[self.curr_block]["var_2_coord"])
+        # print("dependencies")
+        # print(self.blocks_vars[self.curr_block]["decls_dependencies"])
+        # print(len(self.blocks_vars[self.curr_block]["permutations"]))
+        # print(self.blocks_vars[self.curr_block]["permutations"])
         if self.blocks_vars[self.curr_block]["decls_id"] == []:
             del self.blocks_vars[self.curr_block]
 
@@ -441,7 +449,7 @@ class DeclDumVarVisitor(MutatorVisitor):
                         type=c_ast.TypeDecl(new_var_name, quals=[], align=[], type=c_ast.IdentifierType(['int']), coord=node.coord),
                         init=None,
                         bitsize=None ,
-                        coord=node.coord))
+                        coord=None))
                 else:
                     if isinstance(x, c_ast.Decl) and isinstance(x.type, c_ast.TypeDecl):
                         last_decl = i
@@ -456,10 +464,10 @@ class DeclDumVarVisitor(MutatorVisitor):
                         type=c_ast.TypeDecl(new_var_name, quals=[], align=[], type=c_ast.IdentifierType(['int']), coord=node.coord),
                         init=None,
                         bitsize=None ,
-                        coord=node.coord))
+                        coord=None))
                         break
         n_body = self.visit(body)
-        n_func_def_ast = c_ast.FuncDef(node.decl, node.param_decls, n_body, node.coord)
+        n_func_def_ast = c_ast.FuncDef(node.decl, node.param_decls, n_body, coord)
         return n_func_def_ast
 
 #-----------------------------------------------------------------
@@ -482,7 +490,7 @@ class ReorderVarDeclsVisitor(MutatorVisitor):
                 last_decl = 0
                 for i in range(len(block_items)):
                     x = block_items[i]
-                    if isinstance(x, c_ast.Decl) and isinstance(x.type, c_ast.TypeDecl):
+                    if isinstance(x, c_ast.Decl):
                         last_decl = i
                         continue
                     else:
@@ -507,12 +515,15 @@ def get_possible_blocks_permutations(blocks_info):
     num_decls_per_block = []
     blocks_permutations = []
     for b in blocks_info.keys():
+        perms = blocks_info[b]["permutations"]
+        if len(perms) == 0:
+            continue
         blocks.append(b)
-        blocks_permutations.append(blocks_info[b]["permutations"])
-        num_decls_per_block.append(range(len(blocks_permutations[-1])))
-        
+        blocks_permutations.append(perms)
+        num_decls_per_block.append(list(range(len(perms))))
+
     permutations = list(product(*num_decls_per_block))
-    blocks_reorderings = []    
+    blocks_reorderings = []
     for p in permutations:
         d = dict()
         for b in range(len(p)):
@@ -523,6 +534,7 @@ def get_possible_blocks_permutations(blocks_info):
 
     if blocks_reorderings == []:
         return [list()]
+
     return blocks_reorderings
 
 #-----------------------------------------------------------------
@@ -595,6 +607,7 @@ def gen_variable_mappings(var_maps, bn, bin_numbers, output_dir):
     #         break
     bn_a = bin_numbers[0]
     var_dict = dict()
+    # print(var_maps)
     other_d = var_maps[bn_a]
     d = var_maps[bn]
     for v in other_d.keys():
@@ -658,6 +671,7 @@ def instrument_file(input_file, output_dir):
         ord = 0
         for k in v.blocks_vars.keys():
             ord += len(v.blocks_vars[k]["permutations"])
+            # print(v.blocks_vars[k])
         print("  Number of permutations:", ord)
     # return
 
@@ -682,28 +696,29 @@ def instrument_file(input_file, output_dir):
             perc = 0.1 if total_progs < 100000 else 0.01
 
         min_per_mutation = 25
-        if len(bin_ops_2_swap) > 1:
-            bin_ops_2_swap = [bin_ops_2_swap[0]] + random.sample(bin_ops_2_swap[1:], max(int(perc * len(bin_ops_2_swap)-1), 1))
-        if len(if_elses_2_swap) > 1:
-            if_elses_2_swap = [if_elses_2_swap[0]] + random.sample(if_elses_2_swap[1:], max(int(perc * len(if_elses_2_swap)-1), 1))
-        if len(inc_ops_2_swap) > 1:
-            inc_ops_2_swap = [inc_ops_2_swap[0]] + random.sample(inc_ops_2_swap[1:], max(int(perc * len(inc_ops_2_swap)-1), 1))
-        if len(fors_2_swap) > 1:
-            fors_2_swap = [fors_2_swap[0]] + random.sample(fors_2_swap[1:], max(int(perc * len(fors_2_swap)-1), 1))
-        if len(block_permutations) > 1:
-            block_permutations = [block_permutations[0]] + random.sample(block_permutations[1:], max(int(perc*len(block_permutations)), 1))
-        n_reorderings = len(block_permutations)
-        total_progs = len(bin_ops_2_swap)*len(if_elses_2_swap)*len(inc_ops_2_swap)*len(range(1, dv_limit, -1))*n_reorderings*len(fors_2_swap)
-        perc = perc*0.9
-        min_per_mutation = 1 if min_per_mutation == 1 else min_per_mutation - 1
+        while total_progs > 250:
+            if len(bin_ops_2_swap) > min_per_mutation:
+                bin_ops_2_swap = [bin_ops_2_swap[0]] + random.sample(bin_ops_2_swap[1:], max(int(perc * len(bin_ops_2_swap)-1), 1))
+            if len(if_elses_2_swap) > min_per_mutation:
+                if_elses_2_swap = [if_elses_2_swap[0]] + random.sample(if_elses_2_swap[1:], max(int(perc * len(if_elses_2_swap)-1), 1))
+            if len(inc_ops_2_swap) > min_per_mutation:
+                inc_ops_2_swap = [inc_ops_2_swap[0]] + random.sample(inc_ops_2_swap[1:], max(int(perc * len(inc_ops_2_swap)-1), 1))
+            if len(fors_2_swap) > min_per_mutation:
+                fors_2_swap = [fors_2_swap[0]] + random.sample(fors_2_swap[1:], max(int(perc * len(fors_2_swap)-1), 1))
+            if len(block_permutations) > min_per_mutation:
+                block_permutations = [block_permutations[0]] + random.sample(block_permutations[1:], max(int(perc*len(block_permutations)), 1))
+            n_reorderings = len(block_permutations)
+            total_progs = len(bin_ops_2_swap)*len(if_elses_2_swap)*len(inc_ops_2_swap)*len(range(1, dv_limit, -1))*n_reorderings*len(fors_2_swap)
+            perc = perc*0.9
+            min_per_mutation = 1 if min_per_mutation == 1 else min_per_mutation - 1
 
-        if args.verbose:
-            print()
-            print("Number of Programs with BinOps swapped:", len(bin_ops_2_swap))
-            print("Number of Programs with if-statements swapped:", len(if_elses_2_swap))
-            print("Number of Programs with swapped increment operators:", len(inc_ops_2_swap))
-            print("Number of Programs with for translated 2 whiles loops:", len(fors_2_swap))
-            print(" Number of blocks reorders:", n_reorderings)
+            if args.verbose:
+                print()
+                print("Number of Programs with BinOps swapped:", len(bin_ops_2_swap))
+                print("Number of Programs with if-statements swapped:", len(if_elses_2_swap))
+                print("Number of Programs with swapped increment operators:", len(inc_ops_2_swap))
+                print("Number of Programs with for translated 2 whiles loops:", len(fors_2_swap))
+                print(" Number of blocks reorders:", n_reorderings)
 
         if args.verbose:
             print("\n\nNumber of possible reorderings (Sampled):", n_reorderings)
@@ -791,6 +806,7 @@ def gen_program_mutations(progs_dir, output_dir):
             s_muts = instrument_file(p, output_dir+"/"+stu_id)
         except:
             continue
+        s_muts = instrument_file(p, output_dir+"/"+stu_id)
         if args.info and s_muts is not None:
            total_progs += s_muts
     if args.info:
