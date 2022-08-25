@@ -1,4 +1,5 @@
 # MultIPAS
+
 MultIPAs : Applying Program Transformations to Introductory Programming Assignments for Data Augmentation
 
 MultIPAs is a program transformation framework capable of augmenting small imperative C program benchmarks by performing six different syntactic program mutations and three semantic program mutilations.
@@ -79,6 +80,10 @@ optional arguments:
 ## Variable Mapping
 
 Every time MultIPAs mutates or mutilates a program, a mapping between the original program's set of variables and the mutated/mutilated program's sets of variables is generated. This variable mapping can help program repair frameworks that rely on mappings between the sets of variables of the correct implementation and the incorrect program they are trying to repair.
+
+## References
+
+P. Orvalho, M. Janota, and V. Manquinho. MultIPAs: Applying Program Transformations to Introductory Programming Assignments for Data Augmentation. In 30th ACM Joint European Software Engineering Conference and Symposium on the Foundations of Software Engineering, ESEC/FSE 2022. [PDF](https://web.ist.utl.pt/ist181151/papers/fse22-MultIPAs.pdf)
 
 ## Introductory Programming Assignments (IPAs) Datasets 
 
