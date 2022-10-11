@@ -42,6 +42,7 @@ incr_decr_ops = {"p++" : "++", "++" : "p++", "--" : "p--", "p--" : "--"}
 class MutatorVisitor(ASTVisitor):
 
     def __init__ (self):
+        super().__init__()
         # list with the program variables
         self.scope_vars = dict()
         # number of binary operations to swap
