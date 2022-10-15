@@ -449,12 +449,18 @@ def instrument_file(input_file, output_dir):
                     v_h = VariableMisuseVisitor(var_misused)
                     b_ast = v_h.visit(n_ast)
                     var_maps[curr_num] = v.scope_vars
-                    bugs_map[curr_num] = bugs_map[curr_num] | v_h.bugs_list if curr_num in bugs_map.keys() else v_h.bugs_list
+                    if curr_num in bugs_map.keys():
+                        bugs_map[curr_num].update(v_h.bugs_list)
+                    else:
+                        bugs_map[curr_num] = v_h.bugs_list
                 if args.asg_del or args.all_mut:
                     v_h = AssignmentDeletionVisitor(exp)
                     b_ast = v_h.visit(n_ast)
                     var_maps[curr_num] = v.scope_vars
-                    bugs_map[curr_num] = bugs_map[curr_num] | v_h.bugs_list if curr_num in bugs_map.keys() else v_h.bugs_list                    
+                    if curr_num in bugs_map.keys():
+                        bugs_map[curr_num].update(v_h.bugs_list)
+                    else:
+                        bugs_map[curr_num] = v_h.bugs_list
                     
                 if args.verbose:
                     print("Bug mapping:", curr_num, bugs_map[curr_num])
