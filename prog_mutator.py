@@ -449,8 +449,8 @@ class DeclDumVarVisitor(MutatorVisitor):
                         align=[],
                         type=c_ast.TypeDecl(new_var_name, quals=[], align=[], type=c_ast.IdentifierType(['int']), coord=node.coord),
                         init=None,
-                        bitsize=None ,
-                        coord=None))
+                        bitsize=None,
+                        coord=node.coord))
                 else:
                     if isinstance(x, c_ast.Decl) and isinstance(x.type, c_ast.TypeDecl):
                         last_decl = i
@@ -464,8 +464,8 @@ class DeclDumVarVisitor(MutatorVisitor):
                         align=[],
                         type=c_ast.TypeDecl(new_var_name, quals=[], align=[], type=c_ast.IdentifierType(['int']), coord=node.coord),
                         init=None,
-                        bitsize=None ,
-                        coord=None))
+                        bitsize=None,
+                        coord=node.coord))
                         break
         n_body = self.visit(body)
         n_func_def_ast = c_ast.FuncDef(node.decl, node.param_decls, n_body, coord)
@@ -803,10 +803,10 @@ def gen_program_mutations(progs_dir, output_dir):
         stu_id = np.split("-")[1] if "-" in np else np.replace(".c", "")
         if args.verbose:
             print("Dealing with student ", stu_id)
-        try:
-            s_muts = instrument_file(p, output_dir+"/"+stu_id)
-        except:
-            continue
+        # try:
+        s_muts = instrument_file(p, output_dir+"/"+stu_id)
+        # except:
+        #     continue
         s_muts = instrument_file(p, output_dir+"/"+stu_id)
         if args.info and s_muts is not None:
            total_progs += s_muts
