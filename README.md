@@ -83,7 +83,7 @@ Every time MultIPAs mutates or mutilates a program, a mapping between the origin
 
 ## References
 
-P. Orvalho, M. Janota, and V. Manquinho. MultIPAs: Applying Program Transformations to Introductory Programming Assignments for Data Augmentation. In 30th ACM Joint European Software Engineering Conference and Symposium on the Foundations of Software Engineering, ESEC/FSE 2022. [PDF](https://web.ist.utl.pt/ist181151/papers/fse22-MultIPAs.pdf)
+P. Orvalho, M. Janota, and V. Manquinho. MultIPAs: Applying Program Transformations to Introductory Programming Assignments for Data Augmentation. In 30th ACM Joint European Software Engineering Conference and Symposium on the Foundations of Software Engineering, ESEC/FSE 2022. [https://dl.acm.org/doi/10.1145/3540250.3558931](https://dl.acm.org/doi/10.1145/3540250.3558931).
 
 ## Introductory Programming Assignments (IPAs) Datasets 
 
